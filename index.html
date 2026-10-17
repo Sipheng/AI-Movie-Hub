@@ -214,6 +214,13 @@
       { name: "Olevod",    url: "https://olevod.com/" }
     ];
 
+    // ---- New section: Featured streaming providers ----
+    var GROUP_PROVIDERS = [
+      { name: "WeTV",    url: "https://reelfren.com/explore?provider=wetv&lang=en" },
+      { name: "iQIYI",   url: "https://reelfren.com/explore?provider=iqiyi&lang=en" },
+      { name: "FilmBox", url: "https://reelfren.com/explore?provider=filmbox&lang=en" }
+    ];
+
     // ---- Group 1: chartdrama ----
     var GROUP_CHARTDRAMA = [
       { name: "chartdrama",   url: "https://chartdrama.com/" },
@@ -360,6 +367,7 @@
     (function render() {
       var app = document.getElementById("app");
       app.appendChild(buildSection("Featured", GROUP_TOP, 3, "top"));
+      app.appendChild(buildSection("Featured Providers", GROUP_PROVIDERS, 0, "featured-providers"));
       app.appendChild(buildSection("chartdrama", GROUP_CHARTDRAMA, 0, "middle"));
       app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7, "bottom"));
     })();
