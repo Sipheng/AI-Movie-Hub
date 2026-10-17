@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TV Hub — Drama Streaming Launcher</title>
+<title>AI Movie Hub</title>
 <style>
   :root { --bg: #dceee4; --ink: #22543d; }
   * { box-sizing: border-box; }
@@ -24,30 +24,16 @@
   header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 22px clamp(20px, 4vw, 56px);
+    justify-content: center;
+    padding: 24px clamp(20px, 4vw, 56px);
     border-bottom: 1px solid rgba(0,0,0,.08);
   }
   .brand {
-    font-size: clamp(20px, 2.4vw, 30px);
+    font-size: clamp(24px, 3vw, 38px);
     font-weight: 800;
     letter-spacing: .5px;
     color: #2f8a55;
-  }
-  .brand .dot { color: #52b97c; }
-  .title {
-    flex: 1;
     text-align: center;
-    font-size: clamp(15px, 1.8vw, 22px);
-    font-weight: 600;
-    color: #2f8a55;
-  }
-  .avatar {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    font-weight: 700; color: #fff;
-    background: linear-gradient(135deg, #52b97c, #246b41);
   }
 
   /* ---------- Sections ---------- */
@@ -82,8 +68,8 @@
   /* ---------- Responsive grid ---------- */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: clamp(10px, 1.4vw, 18px);
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: clamp(14px, 1.6vw, 22px);
   }
 
   /* ---------- Tiles ---------- */
@@ -91,12 +77,14 @@
     position: relative;
     display: flex;
     align-items: center;
-    min-height: 76px;
-    padding: 18px 20px;
-    border-radius: 20px;
+    justify-content: center;
+    text-align: center;
+    min-height: 152px;
+    padding: 28px 24px;
+    border-radius: 24px;
     text-decoration: none;
     color: #fff;
-    font-size: clamp(15px, 1.4vw, 19px);
+    font-size: clamp(18px, 1.7vw, 24px);
     font-weight: 700;
     text-shadow: 0 1px 2px rgba(0,0,0,.18);
     box-shadow: 0 6px 14px rgba(0,0,0,.12);
@@ -129,9 +117,7 @@
 </head>
 <body>
   <header>
-    <div class="brand">TV<span class="dot">●</span>HUB</div>
-    <div class="title">Drama Streaming Launcher</div>
-    <div class="avatar">M</div>
+    <div class="brand">AI Movie Hub</div>
   </header>
 
   <main id="app"></main>
@@ -139,6 +125,14 @@
   <footer>Select a tile to open the website. Use the remote D-pad / arrow keys and Enter on a TV.</footer>
 
   <script>
+    // ---- Top section: Featured ----
+    var GROUP_TOP = [
+      { name: "KissKH",    url: "https://kisskh.co/" },
+      { name: "KhFullHD",  url: "https://khfullhd.co/" },
+      { name: "MovieNova", url: "https://movienova.sc/" },
+      { name: "Olevod",    url: "https://olevod.com/" }
+    ];
+
     // ---- Group 1: chartdrama ----
     var GROUP_CHARTDRAMA = [
       { name: "chartdrama",   url: "https://chartdrama.com/" },
@@ -215,8 +209,8 @@
     // so nothing is harsh or over-contrasted, and white text stays readable.
     function tileColors(i) {
       var hue = (i * 47) % 360;
-      var c1 = "hsl(" + hue + ", 52%, 50%)";
-      var c2 = "hsl(" + hue + ", 54%, 40%)";
+      var c1 = "hsl(" + hue + ", 34%, 56%)";
+      var c2 = "hsl(" + hue + ", 36%, 47%)";
       return "linear-gradient(90deg, " + c1 + ", " + c2 + ")";
     }
 
@@ -271,6 +265,7 @@
 
     (function render() {
       var app = document.getElementById("app");
+      app.appendChild(buildSection("Featured", GROUP_TOP, 3));
       app.appendChild(buildSection("chartdrama", GROUP_CHARTDRAMA, 0));
       app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7));
     })();
