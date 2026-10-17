@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TV Hub — Drama Streaming Launcher</title>
+<style>
+  :root { --bg: #dceee4; --ink: #22543d; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,.35) 0 2px, transparent 3px),
+      radial-gradient(circle at 80% 60%, rgba(255,255,255,.30) 0 2px, transparent 3px),
+      radial-gradient(circle at 45% 85%, rgba(255,255,255,.30) 0 2px, transparent 3px);
+    background-size: 180px 180px, 240px 240px, 200px 200px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px clamp(20px, 4vw, 56px);
+    border-bottom: 1px solid rgba(0,0,0,.08);
+  }
+  .brand {
+    font-size: clamp(20px, 2.4vw, 30px);
+    font-weight: 800;
+    letter-spacing: .5px;
+    color: #2f8a55;
+  }
+  .brand .dot { color: #52b97c; }
+  .title {
+    flex: 1;
+    text-align: center;
+    font-size: clamp(15px, 1.8vw, 22px);
+    font-weight: 600;
+    color: #2f8a55;
+  }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, #52b97c, #246b41);
+  }
+
+  /* ---------- Sections ---------- */
+  main { padding: clamp(16px, 3vw, 36px); }
+  .section { max-width: 1600px; margin: 0 auto; }
+  .section + .section { margin-top: clamp(22px, 3vw, 40px); }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 4px 2px 16px;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-size: clamp(16px, 1.8vw, 22px);
+    font-weight: 800;
+    color: #22543d;
+    white-space: nowrap;
+  }
+  .section-head .rule {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(34,84,61,.35), rgba(34,84,61,0));
+    border-radius: 2px;
+  }
+  .section-head .count {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(34,84,61,.6);
+  }
+
+  /* ---------- Responsive grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: clamp(10px, 1.4vw, 18px);
+  }
+
+  /* ---------- Tiles ---------- */
+  .tile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 76px;
+    padding: 18px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #fff;
+    font-size: clamp(15px, 1.4vw, 19px);
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,.18);
+    box-shadow: 0 6px 14px rgba(0,0,0,.12);
+    transition: transform .15s ease, box-shadow .15s ease, outline-color .15s ease, filter .15s ease;
+    outline: 3px solid transparent;
+    outline-offset: 2px;
+  }
+  .tile .arrow {
+    position: absolute;
+    top: 11px; right: 15px;
+    font-size: 15px;
+    opacity: .9;
+  }
+  .tile:hover,
+  .tile:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 22px rgba(0,0,0,.22);
+    filter: brightness(1.06);
+    outline-color: #ffffff;
+  }
+  .tile:active { transform: translateY(-1px); }
+
+  footer {
+    text-align: center;
+    padding: 24px 16px 40px;
+    color: rgba(34, 84, 61, .6);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">TV<span class="dot">●</span>HUB</div>
+    <div class="title">Drama Streaming Launcher</div>
+    <div class="avatar">M</div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer>Select a tile to open the website. Use the remote D-pad / arrow keys and Enter on a TV.</footer>
+
+  <script>
+    // ---- Group 1: chartdrama ----
+    var GROUP_CHARTDRAMA = [
+      { name: "chartdrama",   url: "https://chartdrama.com/" },
+      { name: "reelshort",    url: "https://reelshort.chartdrama.com/" },
+      { name: "dramabox",     url: "https://dramabox.chartdrama.com/" },
+      { name: "netshort",     url: "https://netshort.chartdrama.com/" },
+      { name: "goodshort",    url: "https://goodshort.chartdrama.com/" },
+      { name: "dramawave",    url: "https://dramawave.chartdrama.com/" },
+      { name: "shortmax",     url: "https://shortmax.chartdrama.com/" },
+      { name: "4drama",       url: "https://4drama.chartdrama.com/" },
+      { name: "stardusttv",   url: "https://stardusttv.chartdrama.com/" },
+      { name: "reereels",     url: "https://freereels.chartdrama.com/" },
+      { name: "starshort",    url: "https://starshort.chartdrama.com/" },
+      { name: "tastelife",    url: "https://tastelife.chartdrama.com/" },
+      { name: "shotshort",    url: "https://shotshort.chartdrama.com/" },
+      { name: "dramatv",      url: "https://dramatv.chartdrama.com/" },
+      { name: "flextv",       url: "https://flextv.chartdrama.com/" },
+      { name: "shorts",       url: "https://shorts.chartdrama.com/" },
+      { name: "novafilck",    url: "https://novafilck.chartdrama.com/" },
+      { name: "thisreels",    url: "https://thisreels.chartdrama.com/" },
+      { name: "sodatv",       url: "https://sodatv.chartdrama.com/" },
+      { name: "kalostv",      url: "https://kalostv.chartdrama.com/" },
+      { name: "muvpix",       url: "https://muvpix.chartdrama.com/" },
+      { name: "toonory",      url: "https://toonory.chartdrama.com/" },
+      { name: "aurareels",    url: "https://aurareels.chartdrama.com/" },
+      { name: "venixtv",      url: "https://venixtv.chartdrama.com/" },
+      { name: "starreel",     url: "https://starreel.chartdrama.com/" },
+      { name: "leapreels",    url: "https://leapreels.chartdrama.com/" },
+      { name: "flareflow",    url: "https://flareflow.chartdrama.com/" },
+      { name: "joyreels",     url: "https://joyreels.chartdrama.com/" },
+      { name: "ziptaletv",    url: "https://ziptaletv.chartdrama.com/" },
+      { name: "vyntage",      url: "https://vyntage.chartdrama.com/" },
+      { name: "swoopreels",   url: "https://swoopreels.chartdrama.com/" },
+      { name: "flikso",       url: "https://flikso.chartdrama.com/" },
+      { name: "rivoshort",    url: "https://rivoshort.chartdrama.com/" },
+      { name: "ersevoyagetv", url: "https://versevoyagetv.chartdrama.com/" },
+      { name: "cubetv",       url: "https://cubetv.chartdrama.com/" },
+      { name: "sanpplay",     url: "https://sanpplay.chartdrama.com/" },
+      { name: "nebuluxe",     url: "https://nebuluxe.chartdrama.com/" },
+      { name: "lunory",       url: "https://lunory.chartdrama.com/" },
+      { name: "myrelle",      url: "https://myrelle.chartdrama.com/" },
+      { name: "pinedrama",    url: "https://pinedrama.chartdrama.com/" },
+      { name: "dramabite",    url: "https://dramabite.chartdrama.com/" },
+      { name: "raptdrama",    url: "https://raptdrama.chartdrama.com/" },
+      { name: "plotify",      url: "https://plotify.chartdrama.com/" }
+    ];
+
+    // ---- Group 2: dramafren ----
+    var GROUP_DRAMAFREN = [
+      { name: "dramafren",   url: "https://dramafren.org/" },
+      { name: "dramabox",    url: "https://dramabox.dramafren.org/" },
+      { name: "goodshort",   url: "https://goodshort.dramafren.org/" },
+      { name: "netshort",    url: "https://netshort.dramafren.org/" },
+      { name: "flickreels",  url: "https://flickreels.dramafren.org/" },
+      { name: "stardusttv",  url: "https://stardusttv.dramafren.org/" },
+      { name: "dramawave",   url: "https://dramawave.dramafren.org/" },
+      { name: "shortmax",    url: "https://shortmax.dramafren.org/" },
+      { name: "hortmaxv2",   url: "https://shortmaxv2.shorttw.live/" },
+      { name: "reelshort",   url: "https://reelshort.dramafren.org/" },
+      { name: "idrama",      url: "https://idrama.dramafren.org/" },
+      { name: "flextv",      url: "https://flextv.dramafren.org/" },
+      { name: "starshort",   url: "https://starshort.dramafren.org/" },
+      { name: "kalostv",     url: "https://kalostv.dramafren.org/" },
+      { name: "dramabite",   url: "https://dramabite.dramafren.org/" },
+      { name: "microdrama",  url: "https://microdrama.dramafren.org/" },
+      { name: "shortwave",   url: "https://shortwave.dramafren.org/" },
+      { name: "tvseries",    url: "https://tvseries.dramafren.org/" },
+      { name: "moboreels",   url: "https://moboreels.dramafren.org/" },
+      { name: "reelfren",    url: "https://reelfren.com/" }
+    ];
+
+    // Build a soft, distinct color for each tile. Hues are spread apart so
+    // neighbours differ clearly, but lightness/saturation are kept constant
+    // so nothing is harsh or over-contrasted, and white text stays readable.
+    function tileColors(i) {
+      var hue = (i * 47) % 360;
+      var c1 = "hsl(" + hue + ", 52%, 50%)";
+      var c2 = "hsl(" + hue + ", 54%, 40%)";
+      return "linear-gradient(90deg, " + c1 + ", " + c2 + ")";
+    }
+
+    function buildTile(site, colorIndex) {
+      var a = document.createElement("a");
+      a.className = "tile";
+      a.href = site.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.background = tileColors(colorIndex);
+
+      var label = document.createElement("span");
+      label.textContent = site.name;   // text only — safe, no HTML injection
+
+      var arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.textContent = "\u2197";
+
+      a.appendChild(label);
+      a.appendChild(arrow);
+      return a;
+    }
+
+    function buildSection(title, sites, startColorIndex) {
+      var section = document.createElement("section");
+      section.className = "section";
+
+      var head = document.createElement("div");
+      head.className = "section-head";
+      var h2 = document.createElement("h2");
+      h2.textContent = title;
+      var rule = document.createElement("div");
+      rule.className = "rule";
+      var count = document.createElement("span");
+      count.className = "count";
+      count.textContent = sites.length + " sites";
+      head.appendChild(h2);
+      head.appendChild(rule);
+      head.appendChild(count);
+
+      var grid = document.createElement("nav");
+      grid.className = "grid";
+      grid.setAttribute("aria-label", title);
+      sites.forEach(function (site, idx) {
+        grid.appendChild(buildTile(site, startColorIndex + idx));
+      });
+
+      section.appendChild(head);
+      section.appendChild(grid);
+      return section;
+    }
+
+    (function render() {
+      var app = document.getElementById("app");
+      app.appendChild(buildSection("chartdrama", GROUP_CHARTDRAMA, 0));
+      app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7));
+    })();
+  </script>
+</body>
+</html>
