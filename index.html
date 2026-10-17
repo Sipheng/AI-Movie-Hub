@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AI Movie Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
 <style>
   :root { --bg: #dceee4; --ink: #22543d; }
   * { box-sizing: border-box; }
@@ -26,8 +29,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 14px;
     padding: 24px clamp(20px, 4vw, 56px);
     border-bottom: 1px solid rgba(0,0,0,.08);
+  }
+  .logo {
+    width: clamp(40px, 4vw, 56px);
+    height: clamp(40px, 4vw, 56px);
+    border-radius: 14px;
+    box-shadow: 0 3px 8px rgba(0,0,0,.18);
   }
   .brand {
     font-size: clamp(24px, 3vw, 38px);
@@ -184,6 +194,7 @@
 </head>
 <body>
   <header>
+    <img class="logo" src="icon.png" alt="AI Movie Hub logo" />
     <div class="brand">AI Movie Hub</div>
   </header>
 
