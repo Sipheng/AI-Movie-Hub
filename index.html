@@ -364,61 +364,58 @@
       app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7, "bottom"));
     })();
 
-    // Make the floating jump nav follow the mouse: it snaps to whichever
-    // screen edge (left / right / top / bottom) the cursor is nearest to,
-    // and slides along that edge to stay next to the pointer.
+    // The floating jump nav reacts to the mouse by snapping to whichever
+    // screen edge the cursor is nearest to (left / right / top / bottom). It
+    // anchors to the MIDDLE of that edge — it does NOT track the pointer
+    // continuously — so it never dodges the cursor and every button stays
+    // clickable. It also freezes while you are hovering over it.
     (function followMouse() {
       var jump = document.querySelector(".jump");
       if (!jump) return;
 
-      var EDGE = 18;        // distance from the edge in px
+      var EDGE = 18;
+      var current = "right";
+      var frozen = false;
       var pending = null;
 
-      function place(mx, my) {
-        var vw = window.innerWidth;
-        var vh = window.innerHeight;
-
-        var distLeft = mx;
-        var distRight = vw - mx;
-        var distTop = my;
-        var distBottom = vh - my;
-        var minH = Math.min(distLeft, distRight);   // nearest vertical edge
-        var minV = Math.min(distTop, distBottom);   // nearest horizontal edge
-
-        // Reset positional props each time so only the active ones apply.
+      function apply(edge) {
         jump.style.left = "auto";
         jump.style.right = "auto";
         jump.style.top = "auto";
         jump.style.bottom = "auto";
-
-        var rect = jump.getBoundingClientRect();
-
-        if (minH <= minV) {
-          // Attach to the nearest LEFT or RIGHT edge; stack vertically.
+        if (edge === "left" || edge === "right") {
           jump.style.flexDirection = "column";
-          if (distLeft <= distRight) { jump.style.left = EDGE + "px"; }
-          else { jump.style.right = EDGE + "px"; }
-          var y = Math.min(Math.max(my, rect.height / 2 + 8), vh - rect.height / 2 - 8);
-          jump.style.top = y + "px";
+          jump.style.top = "50%";
           jump.style.transform = "translateY(-50%)";
+          jump.style[edge] = EDGE + "px";
         } else {
-          // Attach to the nearest TOP or BOTTOM edge; lay out horizontally.
           jump.style.flexDirection = "row";
-          if (distTop <= distBottom) { jump.style.top = EDGE + "px"; }
-          else { jump.style.bottom = EDGE + "px"; }
-          var x = Math.min(Math.max(mx, rect.width / 2 + 8), vw - rect.width / 2 - 8);
-          jump.style.left = x + "px";
+          jump.style.left = "50%";
           jump.style.transform = "translateX(-50%)";
+          jump.style[edge] = EDGE + "px";
         }
+      }
+      apply(current);
+
+      function pick(mx, my) {
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var d = { left: mx, right: vw - mx, top: my, bottom: vh - my };
+        var edge = "right", best = Infinity;
+        for (var k in d) { if (d[k] < best) { best = d[k]; edge = k; } }
+        if (edge !== current) { current = edge; apply(edge); }
       }
 
       window.addEventListener("mousemove", function (e) {
-        if (pending) return;
+        if (frozen || pending) return;
         pending = requestAnimationFrame(function () {
           pending = null;
-          place(e.clientX, e.clientY);
+          pick(e.clientX, e.clientY);
         });
       });
+
+      // Freeze the position while the pointer is on the nav so clicks land.
+      jump.addEventListener("mouseenter", function () { frozen = true; });
+      jump.addEventListener("mouseleave", function () { frozen = false; });
     })();
   </script>
 </body>
