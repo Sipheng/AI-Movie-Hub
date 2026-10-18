@@ -50,9 +50,15 @@
   }
   .movie-search button {
     border: 0; border-radius: 12px; padding: 12px 20px; font: inherit; font-weight: 700;
-    color: #fff; background: linear-gradient(135deg, #52b97c, #2f8a55); cursor: pointer;
+    color: #fff; background: #8b9690; cursor: pointer;
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  .movie-search button.ready {
+    background: linear-gradient(135deg, #ffb52e, #f07818);
+    box-shadow: 0 0 0 3px rgba(255,181,46,.22);
   }
   .movie-search button:hover, .movie-search button:focus-visible { filter: brightness(1.08); }
+  .movie-search button.ready:hover { transform: translateY(-1px); }
   .search-help { margin: -6px 0 0; color: rgba(34,84,61,.7); text-align: center; font-size: 13px; }
   @media (max-width: 480px) { .movie-search { gap: 6px; } .movie-search button { padding: 11px 13px; } }
 
@@ -229,6 +235,16 @@
   <script>
     // ---- Top section: Featured ----
     var movieSearchTerm = "";
+    var movieTitleInput = document.getElementById("movieTitle");
+    var movieSearchButton = document.querySelector("#movieSearchForm button[type=submit]");
+
+    function updateSearchButtonState() {
+      var ready = movieTitleInput.value.trim().length > 0;
+      movieSearchButton.classList.toggle("ready", ready);
+      movieSearchButton.setAttribute("aria-label", ready ? "Search title ready" : "Enter a title to enable search highlight");
+    }
+    movieTitleInput.addEventListener("input", updateSearchButtonState);
+    updateSearchButtonState();
 
     document.getElementById("movieSearchForm").addEventListener("submit", function (event) {
       event.preventDefault();
