@@ -238,35 +238,38 @@
     var movieTitleInput = document.getElementById("movieTitle");
     var movieSearchButton = document.querySelector("#movieSearchForm button[type=submit]");
 
-    function updateSearchButtonState() {
-      var ready = movieTitleInput.value.trim().length > 0;
-      movieSearchButton.classList.toggle("ready", ready);
-      movieSearchButton.setAttribute("aria-label", ready ? "Search title ready" : "Enter a title to enable search highlight");
+    function resetSearchConfirmation() {
+      // Typing edits the draft only; the title must be confirmed with Search again.
+      movieSearchTerm = "";
+      movieSearchButton.classList.remove("ready");
+      movieSearchButton.setAttribute("aria-label", "Click Search to confirm the entered title");
     }
-    movieTitleInput.addEventListener("input", updateSearchButtonState);
-    updateSearchButtonState();
+    movieTitleInput.addEventListener("input", resetSearchConfirmation);
+    resetSearchConfirmation();
 
     document.getElementById("movieSearchForm").addEventListener("submit", function (event) {
       event.preventDefault();
-      movieSearchTerm = document.getElementById("movieTitle").value.trim();
+      movieSearchTerm = movieTitleInput.value.trim();
+      movieSearchButton.classList.toggle("ready", movieSearchTerm.length > 0);
+      movieSearchButton.setAttribute("aria-label", movieSearchTerm ? "Search title confirmed" : "Enter a title to search");
       var help = document.querySelector(".search-help");
       help.textContent = movieSearchTerm
-        ? 'Search ready for “' + movieSearchTerm + '”. Now click a box in chartdrama or dramafren.'
-        : 'Search cleared. Website boxes will open their normal homepages.';
+        ? 'Search confirmed for “' + movieSearchTerm + '”. Now click a website box to search there.'
+        : 'Enter a movie title, then click Search to confirm it.';
     });
 
     var GROUP_TOP = [
       { name: "KissKH",    url: "https://kisskh.co/" },
-      { name: "KhFullHD",  url: "https://khfullhd.co/" },
-      { name: "MovieNova", url: "https://movienova.sc/" },
-      { name: "Olevod",    url: "https://olevod.com/" }
+      { name: "KhFullHD",  url: "https://khfullhd.co/", searchType: "khfullhd" },
+      { name: "MovieNova", url: "https://movienova.sc/", searchType: "movienova" },
+      { name: "Olevod",    url: "https://www.olevod.com/", searchType: "olevod" }
     ];
 
     // ---- Featured providers ----
     var GROUP_PROVIDERS = [
-      { name: "WeTV",    url: "https://reelfren.com/explore?provider=wetv&lang=en" },
-      { name: "iQIYI",   url: "https://reelfren.com/explore?provider=iqiyi&lang=en" },
-      { name: "FilmBox", url: "https://reelfren.com/explore?provider=filmbox&lang=en" }
+      { name: "WeTV",    url: "https://reelfren.com/explore?provider=wetv&lang=en", searchType: "reelfren-wetv" },
+      { name: "iQIYI",   url: "https://reelfren.com/explore?provider=iqiyi&lang=en", searchType: "reelfren-iqiyi" },
+      { name: "FilmBox", url: "https://reelfren.com/explore?provider=filmbox&lang=en", searchType: "reelfren-filmbox" }
     ];
 
     // ---- Group 1: chartdrama ----
@@ -337,7 +340,7 @@
       { name: "shortwave",   url: "https://shortwave.dramafren.org/" },
       { name: "tvseries",    url: "https://tvseries.dramafren.org/" },
       { name: "moboreels",   url: "https://moboreels.dramafren.org/" },
-      { name: "reelfren",    url: "https://reelfren.com/" }
+      { name: "reelfren",    url: "https://reelfren.com/", searchType: "reelfren-all" }
     ];
 
     // A curated, harmonious color palette. Each tile picks one gradient from
@@ -370,18 +373,35 @@
       a.rel = "noopener noreferrer";
       a.style.background = tileColors(colorIndex);
       a.addEventListener("click", function (event) {
-        if (!movieSearchTerm || !searchGroup) return;
-        event.preventDefault();
+        if (!movieSearchTerm) return;
         var target = new URL(site.url);
-        if (searchGroup === "chartdrama") {
+        var queryPlus = encodeURIComponent(movieSearchTerm).replace(/%20/g, "+");
+        var queryPercent20 = encodeURIComponent(movieSearchTerm);
+
+        // Explicit search routes for the Featured and Featured Providers tiles.
+        if (site.searchType === "khfullhd") {
+          target.search = "?s=" + queryPlus;
+        } else if (site.searchType === "movienova") {
+          target.pathname = "/search";
+          target.search = "?q=" + queryPlus + "&mode=title";
+        } else if (site.searchType === "olevod") {
+          target.pathname = "/search";
+          target.search = "?q=" + queryPlus;
+        } else if (site.searchType && site.searchType.indexOf("reelfren-") === 0) {
+          var provider = site.searchType === "reelfren-all" ? "all" : site.searchType.slice("reelfren-".length);
+          target.pathname = "/search";
+          target.search = "?q=" + queryPercent20 + "&provider=" + provider + "&lang=en";
+        } else if (searchGroup === "chartdrama") {
           target.pathname = target.pathname.replace(/\/$/, "") + "/search";
-          target.search = "?q=" + encodeURIComponent(movieSearchTerm).replace(/%20/g, "+");
-          target.hash = "";
+          target.search = "?q=" + queryPlus;
         } else if (searchGroup === "dramafren") {
           target.pathname = "/index.php";
-          target.search = "?page=search_result&q=" + encodeURIComponent(movieSearchTerm).replace(/%20/g, "+") + "&lang=en";
-          target.hash = "";
+          target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
+        } else {
+          return; // Other Featured tiles keep their normal homepage links.
         }
+        event.preventDefault();
+        target.hash = "";
         window.open(target.href, "_blank", "noopener,noreferrer");
       });
 
