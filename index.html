@@ -267,6 +267,7 @@
 
     // ---- Featured providers ----
     var GROUP_PROVIDERS = [
+      { name: "reelfren", url: "https://reelfren.com/", searchType: "reelfren-all" },
       { name: "WeTV",    url: "https://reelfren.com/explore?provider=wetv&lang=en", searchType: "reelfren-wetv" },
       { name: "iQIYI",   url: "https://reelfren.com/explore?provider=iqiyi&lang=en", searchType: "reelfren-iqiyi" },
       { name: "FilmBox", url: "https://reelfren.com/explore?provider=filmbox&lang=en", searchType: "reelfren-filmbox" }
@@ -339,8 +340,7 @@
       { name: "microdrama",  url: "https://microdrama.dramafren.org/" },
       { name: "shortwave",   url: "https://shortwave.dramafren.org/" },
       { name: "tvseries",    url: "https://tvseries.dramafren.org/" },
-      { name: "moboreels",   url: "https://moboreels.dramafren.org/" },
-      { name: "reelfren",    url: "https://reelfren.com/", searchType: "reelfren-all" }
+      { name: "moboreels",   url: "https://moboreels.dramafren.org/" }
     ];
 
     // A curated, harmonious color palette. Each tile picks one gradient from
@@ -400,6 +400,9 @@
         } else if (searchGroup === "dramafren" && site.name === "flextv") {
           target.pathname = "/index.php";
           target.search = "?page=search&q=" + queryPlus;
+        } else if (searchGroup === "dramafren" && site.name === "dramawave") {
+          target.pathname = "/index.php";
+          target.search = "?lang=en-US&q=" + queryPlus;
         } else if (searchGroup === "dramafren") {
           target.pathname = "/index.php";
           target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
