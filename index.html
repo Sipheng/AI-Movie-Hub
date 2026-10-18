@@ -217,7 +217,7 @@
         <input id="movieTitle" type="search" placeholder="Enter movie title (e.g. Funny AI)" aria-label="Movie title" autocomplete="off" />
         <button type="submit">Search</button>
       </form>
-      <p class="search-help">Search applies to chartdrama and dramafren websites. Enter a title, search, then choose a website box.</p>
+      <p class="search-help">Search applies to chartdrama, dramafren, and ReelFren providers. Enter a title, click Search to confirm, then choose a website box.</p>
     </div>
   </header>
 
@@ -267,10 +267,48 @@
 
     // ---- Featured providers ----
     var GROUP_PROVIDERS = [
-      { name: "reelfren", url: "https://reelfren.com/", searchType: "reelfren-all" },
-      { name: "WeTV",    url: "https://reelfren.com/explore?provider=wetv&lang=en", searchType: "reelfren-wetv" },
-      { name: "iQIYI",   url: "https://reelfren.com/explore?provider=iqiyi&lang=en", searchType: "reelfren-iqiyi" },
-      { name: "FilmBox", url: "https://reelfren.com/explore?provider=filmbox&lang=en", searchType: "reelfren-filmbox" }
+      { name: "ReelFren", url: "https://reelfren.com/", searchType: "reelfren-all" },
+      { name: "WeTV",     url: "https://reelfren.com/explore?provider=wetv&lang=en", searchType: "reelfren-wetv" },
+      { name: "iQIYI",    url: "https://reelfren.com/explore?provider=iqiyi&lang=en", searchType: "reelfren-iqiyi" },
+      { name: "FilmBox",  url: "https://reelfren.com/explore?provider=filmbox&lang=en", searchType: "reelfren-filmbox" }
+    ];
+
+    // ---- ReelFren provider section ----
+    var GROUP_REELFREN = [
+      { name: "anamana",      url: "https://reelfren.com/explore?provider=anamana&lang=en", searchType: "reelfren-anamana" },
+      { name: "aniboy",       url: "https://reelfren.com/explore?provider=aniboy&lang=en", searchType: "reelfren-aniboy" },
+      { name: "melolo",       url: "https://reelfren.com/explore?provider=melolo&lang=en", searchType: "reelfren-melolo" },
+      { name: "sereal",       url: "https://reelfren.com/explore?provider=sereal&lang=en&feed=latest", searchType: "reelfren-sereal" },
+      { name: "pinedrama",    url: "https://reelfren.com/explore?provider=pinedrama&lang=en&category=0", searchType: "reelfren-pinedrama" },
+      { name: "shorten",      url: "https://reelfren.com/explore?provider=shorten&lang=en&category=releases", searchType: "reelfren-shorten" },
+      { name: "happyshort",   url: "https://reelfren.com/explore?provider=happyshort&lang=en&category=home", searchType: "reelfren-happyshort" },
+      { name: "vigloo",       url: "https://reelfren.com/explore?provider=vigloo&lang=en&category=home", searchType: "reelfren-vigloo" },
+      { name: "rapidtv",      url: "https://reelfren.com/explore?provider=rapidtv&lang=en", searchType: "reelfren-rapidtv" },
+      { name: "rapidtv2",     url: "https://reelfren.com/explore?provider=rapidtv2&lang=en", searchType: "reelfren-rapidtv2" },
+      { name: "raptdrama",    url: "https://reelfren.com/explore?provider=raptdrama&lang=en", searchType: "reelfren-raptdrama" },
+      { name: "cubetv",       url: "https://reelfren.com/explore?provider=cubetv&lang=en", searchType: "reelfren-cubetv" },
+      { name: "joyreels",     url: "https://reelfren.com/explore?provider=joyreels&lang=en", searchType: "reelfren-joyreels" },
+      { name: "reelife",      url: "https://reelfren.com/explore?provider=reelife&lang=en&category=all", searchType: "reelfren-reelife" },
+      { name: "reelshort",    url: "https://reelfren.com/explore?provider=reelshort&lang=en", searchType: "reelfren-reelshort" },
+      { name: "dramabox",     url: "https://reelfren.com/explore?provider=dramabox&lang=en", searchType: "reelfren-dramabox" },
+      { name: "dramawave",    url: "https://reelfren.com/explore?provider=dramawave&lang=en", searchType: "reelfren-dramawave" },
+      { name: "dramanova",    url: "https://reelfren.com/explore?provider=dramanova&lang=en&category=all", searchType: "reelfren-dramanova" },
+      { name: "kalostv",      url: "https://reelfren.com/explore?provider=kalostv&lang=en&category=all", searchType: "reelfren-kalostv" },
+      { name: "vibeshort",    url: "https://reelfren.com/explore?provider=vibeshort&lang=en&category=all", searchType: "reelfren-vibeshort" },
+      { name: "freereels",    url: "https://reelfren.com/explore?provider=freereels&lang=en&category=all", searchType: "reelfren-freereels" },
+      { name: "storyreel",    url: "https://reelfren.com/explore?provider=storyreel&lang=en", searchType: "reelfren-storyreel" },
+      { name: "moviebox",     url: "https://reelfren.com/explore?provider=moviebox&lang=en&category=1232643093049001320", searchType: "reelfren-moviebox" },
+      { name: "movieboxshorts", url: "https://reelfren.com/explore?provider=movieboxshorts&lang=en&category=all", searchType: "reelfren-movieboxshorts" },
+      { name: "bonustv",      url: "https://reelfren.com/explore?provider=bonustv&lang=en", searchType: "reelfren-bonustv" },
+      { name: "moboreels",    url: "https://reelfren.com/explore?provider=moboreels&lang=en", searchType: "reelfren-moboreels" },
+      { name: "netshort",     url: "https://reelfren.com/explore?provider=netshort&lang=en&category=home", searchType: "reelfren-netshort" },
+      { name: "mydrama",      url: "https://reelfren.com/explore?provider=mydrama&lang=en&category=all", searchType: "reelfren-mydrama" },
+      { name: "flareflow",    url: "https://reelfren.com/explore?provider=flareflow&lang=en", searchType: "reelfren-flareflow" },
+      { name: "shortmax",     url: "https://reelfren.com/explore?provider=shortmax&lang=en", searchType: "reelfren-shortmax" },
+      { name: "flextv",       url: "https://reelfren.com/explore?provider=flextv&lang=en&category=newest", searchType: "reelfren-flextv" },
+      { name: "flextv2",      url: "https://reelfren.com/explore?provider=flextv2&lang=en", searchType: "reelfren-flextv2" },
+      { name: "candyjar",     url: "https://reelfren.com/explore?provider=candyjar&lang=en", searchType: "reelfren-candyjar" },
+      { name: "blinkdrama",   url: "https://reelfren.com/explore?provider=blinkdrama&lang=en", searchType: "reelfren-blinkdrama" }
     ];
 
     // ---- Group 1: chartdrama ----
@@ -340,7 +378,7 @@
       { name: "microdrama",  url: "https://microdrama.dramafren.org/" },
       { name: "shortwave",   url: "https://shortwave.dramafren.org/" },
       { name: "tvseries",    url: "https://tvseries.dramafren.org/" },
-      { name: "moboreels",   url: "https://moboreels.dramafren.org/" }
+      { name: "moboreels",   url: "https://moboreels.dramafren.org/" },
     ];
 
     // A curated, harmonious color palette. Each tile picks one gradient from
@@ -460,6 +498,7 @@
       var app = document.getElementById("app");
       app.appendChild(buildSection("Featured", GROUP_TOP, 3, "top"));
       app.appendChild(buildSection("Featured Providers", GROUP_PROVIDERS, 0, "featured-providers"));
+      app.appendChild(buildSection("ReelFren", GROUP_REELFREN, 4, "reelfren", "reelfren"));
       app.appendChild(buildSection("chartdrama", GROUP_CHARTDRAMA, 0, "middle", "chartdrama"));
       app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7, "bottom", "dramafren"));
     })();
