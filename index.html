@@ -41,6 +41,20 @@
     color: #2f8a55;
     text-align: center;
   }
+  .header-content { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+  .movie-search { display: flex; gap: 8px; width: min(620px, 100%); }
+  .movie-search input {
+    flex: 1; min-width: 0; padding: 12px 15px; border: 1px solid #b8d9c5;
+    border-radius: 12px; font: inherit; font-size: 16px; color: #22543d; background: #fff;
+    outline-offset: 2px;
+  }
+  .movie-search button {
+    border: 0; border-radius: 12px; padding: 12px 20px; font: inherit; font-weight: 700;
+    color: #fff; background: linear-gradient(135deg, #52b97c, #2f8a55); cursor: pointer;
+  }
+  .movie-search button:hover, .movie-search button:focus-visible { filter: brightness(1.08); }
+  .search-help { margin: -6px 0 0; color: rgba(34,84,61,.7); text-align: center; font-size: 13px; }
+  @media (max-width: 480px) { .movie-search { gap: 6px; } .movie-search button { padding: 11px 13px; } }
 
   /* ---------- Sections ---------- */
   main { padding: clamp(16px, 3vw, 36px); }
@@ -190,8 +204,15 @@
 </head>
 <body>
   <header>
-    <img class="logo" src="icon.png" alt="AI Movie Hub logo" />
-    <div class="brand">AI Movie Hub</div>
+    <div class="header-content">
+      <img class="logo" src="icon.png" alt="AI Movie Hub logo" />
+      <div class="brand">AI Movie Hub</div>
+      <form class="movie-search" id="movieSearchForm" role="search">
+        <input id="movieTitle" type="search" placeholder="Enter movie title (e.g. Funny AI)" aria-label="Movie title" autocomplete="off" />
+        <button type="submit">Search</button>
+      </form>
+      <p class="search-help">Search applies to chartdrama and dramafren websites. Enter a title, search, then choose a website box.</p>
+    </div>
   </header>
 
   <main id="app"></main>
@@ -207,6 +228,17 @@
 
   <script>
     // ---- Top section: Featured ----
+    var movieSearchTerm = "";
+
+    document.getElementById("movieSearchForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      movieSearchTerm = document.getElementById("movieTitle").value.trim();
+      var help = document.querySelector(".search-help");
+      help.textContent = movieSearchTerm
+        ? 'Search ready for “' + movieSearchTerm + '”. Now click a box in chartdrama or dramafren.'
+        : 'Search cleared. Website boxes will open their normal homepages.';
+    });
+
     var GROUP_TOP = [
       { name: "KissKH",    url: "https://kisskh.co/" },
       { name: "KhFullHD",  url: "https://khfullhd.co/" },
@@ -214,7 +246,7 @@
       { name: "Olevod",    url: "https://olevod.com/" }
     ];
 
-    // ---- New section: Featured streaming providers ----
+    // ---- Featured providers ----
     var GROUP_PROVIDERS = [
       { name: "WeTV",    url: "https://reelfren.com/explore?provider=wetv&lang=en" },
       { name: "iQIYI",   url: "https://reelfren.com/explore?provider=iqiyi&lang=en" },
@@ -314,13 +346,28 @@
       return "linear-gradient(90deg, " + pair[0] + ", " + pair[1] + ")";
     }
 
-    function buildTile(site, colorIndex) {
+    function buildTile(site, colorIndex, searchGroup) {
       var a = document.createElement("a");
       a.className = "tile";
       a.href = site.url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.style.background = tileColors(colorIndex);
+      a.addEventListener("click", function (event) {
+        if (!movieSearchTerm || !searchGroup) return;
+        event.preventDefault();
+        var target = new URL(site.url);
+        if (searchGroup === "chartdrama") {
+          target.pathname = target.pathname.replace(/\/$/, "") + "/search";
+          target.search = "?q=" + encodeURIComponent(movieSearchTerm).replace(/%20/g, "+");
+          target.hash = "";
+        } else if (searchGroup === "dramafren") {
+          target.pathname = "/index.php";
+          target.search = "?page=search_result&q=" + encodeURIComponent(movieSearchTerm).replace(/%20/g, "+") + "&lang=en";
+          target.hash = "";
+        }
+        window.open(target.href, "_blank", "noopener,noreferrer");
+      });
 
       var label = document.createElement("span");
       label.textContent = site.name;   // text only — safe, no HTML injection
@@ -334,7 +381,7 @@
       return a;
     }
 
-    function buildSection(title, sites, startColorIndex, id) {
+    function buildSection(title, sites, startColorIndex, id, searchGroup) {
       var section = document.createElement("section");
       section.className = "section";
       if (id) { section.id = id; }
@@ -356,7 +403,7 @@
       grid.className = "grid";
       grid.setAttribute("aria-label", title);
       sites.forEach(function (site, idx) {
-        grid.appendChild(buildTile(site, startColorIndex + idx));
+        grid.appendChild(buildTile(site, startColorIndex + idx, searchGroup));
       });
 
       section.appendChild(head);
@@ -368,8 +415,8 @@
       var app = document.getElementById("app");
       app.appendChild(buildSection("Featured", GROUP_TOP, 3, "top"));
       app.appendChild(buildSection("Featured Providers", GROUP_PROVIDERS, 0, "featured-providers"));
-      app.appendChild(buildSection("chartdrama", GROUP_CHARTDRAMA, 0, "middle"));
-      app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7, "bottom"));
+      app.appendChild(buildSection("chartdrama", GROUP_CHARTDRAMA, 0, "middle", "chartdrama"));
+      app.appendChild(buildSection("dramafren", GROUP_DRAMAFREN, 7, "bottom", "dramafren"));
     })();
 
     // The floating jump nav reacts to the mouse by snapping to whichever
