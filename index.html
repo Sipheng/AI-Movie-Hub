@@ -394,6 +394,12 @@
         } else if (searchGroup === "chartdrama") {
           target.pathname = target.pathname.replace(/\/$/, "") + "/search";
           target.search = "?q=" + queryPlus;
+        } else if (searchGroup === "dramafren" && site.name === "idrama") {
+          target.pathname = "/index.php";
+          target.search = "?page=search&lang=en&q=" + queryPlus;
+        } else if (searchGroup === "dramafren" && site.name === "flextv") {
+          target.pathname = "/index.php";
+          target.search = "?page=search&q=" + queryPlus;
         } else if (searchGroup === "dramafren") {
           target.pathname = "/index.php";
           target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
