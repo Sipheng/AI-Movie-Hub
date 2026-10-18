@@ -62,22 +62,6 @@
   .search-help { margin: -6px 0 0; color: rgba(34,84,61,.7); text-align: center; font-size: 13px; }
   @media (max-width: 480px) { .movie-search { gap: 6px; } .movie-search button { padding: 11px 13px; } }
 
-  /* ---------- Aggregate movie results (thumbnail + title only) ---------- */
-  .search-results { display:none; max-width:1600px; margin:0 auto; padding:clamp(16px,3vw,36px) clamp(16px,3vw,36px) 0; }
-  .search-results.visible { display:block; }
-  .search-results .results-intro { margin:0 0 18px; color:#22543d; line-height:1.5; }
-  .source-results { margin:0 0 26px; }
-  .source-results h3 { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; font-size:18px; }
-  .source-results h3 a { color:#247346; font-size:13px; font-weight:600; }
-  .movie-results-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(135px,1fr)); gap:14px; }
-  .movie-result { min-width:0; color:#22543d; text-decoration:none; }
-  .movie-result img { display:block; width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:10px; background:#e8f2ec; border:1px solid #d5e5db; }
-  .movie-result .movie-title { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-top:7px; font-size:13px; line-height:1.35; font-weight:650; }
-  .movie-result:hover .movie-title { color:#e47716; }
-  .source-status { color:#667b6d; font-size:13px; margin:8px 0 14px; }
-  .source-empty { color:#667b6d; font-size:13px; padding:10px 0; }
-  @media(max-width:480px) { .movie-results-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } }
-
   /* ---------- Sections ---------- */
   main { padding: clamp(16px, 3vw, 36px); }
   .section { max-width: 1600px; margin: 0 auto; scroll-margin-top: 90px; }
@@ -237,11 +221,6 @@
     </div>
   </header>
 
-  <section id="searchResults" class="search-results" aria-live="polite" aria-label="Aggregated movie search results">
-    <p class="results-intro"></p>
-    <div class="results-grid"></div>
-  </section>
-
   <main id="app"></main>
 
   <!-- Floating navigation: jump to Top / Middle / Bottom sections -->
@@ -268,174 +247,15 @@
     movieTitleInput.addEventListener("input", resetSearchConfirmation);
     resetSearchConfirmation();
 
-    function makeSearchUrl(site, searchGroup, term) {
-      var target = new URL(site.url);
-      var queryPlus = encodeURIComponent(term).replace(/%20/g, "+");
-      var queryPercent20 = encodeURIComponent(term);
-      if (site.searchType === "khfullhd") {
-        target.search = "?s=" + queryPlus;
-      } else if (site.searchType === "movienova") {
-        target.pathname = "/search";
-        target.search = "?q=" + queryPlus + "&mode=title";
-      } else if (site.searchType === "olevod") {
-        target.pathname = "/search";
-        target.search = "?q=" + queryPlus;
-      } else if (site.searchType && site.searchType.indexOf("reelfren-") === 0) {
-        var provider = site.searchType === "reelfren-all" ? "all" : site.searchType.slice("reelfren-".length);
-        target.pathname = "/search";
-        target.search = "?q=" + queryPercent20 + "&provider=" + provider + "&lang=en";
-      } else if (searchGroup === "chartdrama") {
-        target.pathname = target.pathname.replace(/\/$/, "") + "/search";
-        target.search = "?q=" + queryPlus;
-      } else if (searchGroup === "dramafren") {
-        target.pathname = "/index.php";
-        target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
-      } else {
-        return null;
-      }
-      target.hash = "";
-      return target.href;
-    }
-
-    function absoluteUrl(url, base) {
-      try { return new URL(url, base).href; } catch (e) { return ""; }
-    }
-
-    function parseMovieResults(markdown, searchUrl, siteName) {
-      var items = [];
-      var seen = {};
-      // Jina Reader returns page content as Markdown; collect image and title links.
-      var imageRe = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)(?:\s+[^)]*)?\)/g;
-      var linkRe = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\s+[^)]*)?\)/g;
-      var images = [], links = [], m;
-      while ((m = imageRe.exec(markdown)) !== null) {
-        var imageUrl = absoluteUrl(m[2], searchUrl);
-        if (imageUrl && !/logo|avatar|icon|banner|flag/i.test(m[1] + " " + imageUrl)) images.push({title:m[1].trim(), image:imageUrl, at:m.index});
-      }
-      while ((m = linkRe.exec(markdown)) !== null) {
-        if (m[0].charAt(0) === '!') continue;
-        var title = m[1].replace(/\\[*_`]/g, "").trim();
-        var href = absoluteUrl(m[2], searchUrl);
-        if (title && href && !/^(home|search|next|previous|login|sign in|view all|more)$/i.test(title)) links.push({title:title, url:href, at:m.index});
-      }
-      images.forEach(function (img) {
-        var nearest = null, distance = Infinity;
-        links.forEach(function (link) {
-          var d = Math.abs(link.at - img.at);
-          if (d < distance && d < 900) { nearest = link; distance = d; }
-        });
-        var title = img.title && !/^image|poster|thumbnail$/i.test(img.title) ? img.title : (nearest ? nearest.title : "");
-        var url = nearest ? nearest.url : searchUrl;
-        if (!title) return;
-        var key = title.toLowerCase() + "|" + img.image;
-        if (seen[key]) return;
-        seen[key] = true;
-        items.push({title:title, image:img.image, url:url});
-      });
-      // Some reader outputs place the title link near a separate image; also allow title in alt text.
-      return items.slice(0, 24);
-    }
-
-    function loadSourceResults(entry, term, container) {
-      var status = container.querySelector(".source-status");
-      var grid = container.querySelector(".movie-results-grid");
-      status.textContent = "Loading movie thumbnails…";
-      // Reader service converts a public page to readable Markdown. This avoids embedding the whole site.
-      var readerUrl = "https://r.jina.ai/" + entry.url;
-      fetch(readerUrl, {headers: {"Accept":"text/plain"}})
-        .then(function (response) {
-          if (!response.ok) throw new Error("Reader returned " + response.status);
-          return response.text();
-        })
-        .then(function (markdown) {
-          var results = parseMovieResults(markdown, entry.url, entry.name);
-          grid.textContent = "";
-          if (!results.length) {
-            status.textContent = "No readable thumbnails were found for this site. Open its search page to view results.";
-            return;
-          }
-          status.textContent = results.length + " movie result" + (results.length === 1 ? "" : "s");
-          results.forEach(function (movie) {
-            var a = document.createElement("a");
-            a.className = "movie-result";
-            a.href = movie.url;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            var img = document.createElement("img");
-            img.loading = "lazy";
-            img.src = movie.image;
-            img.alt = movie.title;
-            img.referrerPolicy = "no-referrer";
-            img.onerror = function () { this.style.display = "none"; };
-            var title = document.createElement("span");
-            title.className = "movie-title";
-            title.textContent = movie.title;
-            a.appendChild(img);
-            a.appendChild(title);
-            grid.appendChild(a);
-          });
-        })
-        .catch(function () {
-          status.textContent = "Could not retrieve thumbnails automatically. Open this site's search page to view results.";
-        });
-    }
-
-    function renderAggregatedResults(term) {
-      var panel = document.getElementById("searchResults");
-      var intro = panel.querySelector(".results-intro");
-      var grid = panel.querySelector(".results-grid");
-      grid.textContent = "";
-      var allSites = [];
-      GROUP_TOP.forEach(function (site) { allSites.push({ site: site, group: "featured" }); });
-      GROUP_PROVIDERS.forEach(function (site) { allSites.push({ site: site, group: "providers" }); });
-      GROUP_CHARTDRAMA.forEach(function (site) { allSites.push({ site: site, group: "chartdrama" }); });
-      GROUP_DRAMAFREN.forEach(function (site) { allSites.push({ site: site, group: "dramafren" }); });
-      var searchable = allSites.map(function (entry) {
-        return { name: entry.site.name, url: makeSearchUrl(entry.site, entry.group, term) };
-      }).filter(function (entry) { return !!entry.url; });
-      intro.textContent = "Movie thumbnails and titles for “" + term + "” — loading results from " + searchable.length + " websites. Results depend on each site's page structure and access rules.";
-
-      searchable.forEach(function (entry) {
-        var section = document.createElement("section");
-        section.className = "source-results";
-        var heading = document.createElement("h3");
-        var label = document.createElement("span");
-        label.textContent = entry.name;
-        var openLink = document.createElement("a");
-        openLink.href = entry.url;
-        openLink.target = "_blank";
-        openLink.rel = "noopener noreferrer";
-        openLink.textContent = "Open search ↗";
-        heading.appendChild(label);
-        heading.appendChild(openLink);
-        var status = document.createElement("p");
-        status.className = "source-status";
-        status.textContent = "Waiting to load…";
-        var resultGrid = document.createElement("div");
-        resultGrid.className = "movie-results-grid";
-        section.appendChild(heading);
-        section.appendChild(status);
-        section.appendChild(resultGrid);
-        grid.appendChild(section);
-        loadSourceResults(entry, term, section);
-      });
-      panel.classList.add("visible");
-    }
-
     document.getElementById("movieSearchForm").addEventListener("submit", function (event) {
       event.preventDefault();
       movieSearchTerm = movieTitleInput.value.trim();
       movieSearchButton.classList.toggle("ready", movieSearchTerm.length > 0);
       movieSearchButton.setAttribute("aria-label", movieSearchTerm ? "Search title confirmed" : "Enter a title to search");
       var help = document.querySelector(".search-help");
-      if (movieSearchTerm) {
-        help.textContent = 'Search confirmed for “' + movieSearchTerm + '”. Results are shown below; the website boxes are pushed down.';
-        renderAggregatedResults(movieSearchTerm);
-      } else {
-        help.textContent = 'Enter a movie title, then click Search to confirm it.';
-        document.getElementById("searchResults").classList.remove("visible");
-        document.querySelector("#searchResults .results-grid").textContent = "";
-      }
+      help.textContent = movieSearchTerm
+        ? 'Search confirmed for “' + movieSearchTerm + '”. Now click a website box to search there.'
+        : 'Enter a movie title, then click Search to confirm it.';
     });
 
     var GROUP_TOP = [
@@ -554,10 +374,35 @@
       a.style.background = tileColors(colorIndex);
       a.addEventListener("click", function (event) {
         if (!movieSearchTerm) return;
-        var searchUrl = makeSearchUrl(site, searchGroup, movieSearchTerm);
-        if (!searchUrl) return;
+        var target = new URL(site.url);
+        var queryPlus = encodeURIComponent(movieSearchTerm).replace(/%20/g, "+");
+        var queryPercent20 = encodeURIComponent(movieSearchTerm);
+
+        // Explicit search routes for the Featured and Featured Providers tiles.
+        if (site.searchType === "khfullhd") {
+          target.search = "?s=" + queryPlus;
+        } else if (site.searchType === "movienova") {
+          target.pathname = "/search";
+          target.search = "?q=" + queryPlus + "&mode=title";
+        } else if (site.searchType === "olevod") {
+          target.pathname = "/search";
+          target.search = "?q=" + queryPlus;
+        } else if (site.searchType && site.searchType.indexOf("reelfren-") === 0) {
+          var provider = site.searchType === "reelfren-all" ? "all" : site.searchType.slice("reelfren-".length);
+          target.pathname = "/search";
+          target.search = "?q=" + queryPercent20 + "&provider=" + provider + "&lang=en";
+        } else if (searchGroup === "chartdrama") {
+          target.pathname = target.pathname.replace(/\/$/, "") + "/search";
+          target.search = "?q=" + queryPlus;
+        } else if (searchGroup === "dramafren") {
+          target.pathname = "/index.php";
+          target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
+        } else {
+          return; // Other Featured tiles keep their normal homepage links.
+        }
         event.preventDefault();
-        window.open(searchUrl, "_blank", "noopener,noreferrer");
+        target.hash = "";
+        window.open(target.href, "_blank", "noopener,noreferrer");
       });
 
       var label = document.createElement("span");
