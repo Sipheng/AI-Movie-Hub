@@ -60,6 +60,17 @@
   .movie-search button:hover, .movie-search button:focus-visible { filter: brightness(1.08); }
   .movie-search button.ready:hover { transform: translateY(-1px); }
   .search-help { margin: -6px 0 0; color: rgba(34,84,61,.7); text-align: center; font-size: 13px; }
+  .search-results { display: none; width: min(1100px, 100%); margin-top: 8px; padding: 16px; border: 1px solid #cfe5d7; border-radius: 16px; background: #f5fbf7; text-align: left; }
+  .search-results.visible { display: block; }
+  .search-results h2 { margin: 0 0 6px; color: #22543d; font-size: 20px; }
+  .search-results .results-summary { margin: 0 0 14px; color: #52715f; font-size: 13px; }
+  .result-group + .result-group { margin-top: 16px; }
+  .result-group h3 { margin: 0 0 8px; font-size: 14px; color: #22543d; }
+  .result-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; }
+  .result-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 42px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid #d8e9de; color: #22543d; text-decoration: none; font-size: 13px; font-weight: 700; }
+  .result-link:hover, .result-link:focus-visible { background: #e3f5e9; border-color: #62b681; }
+  .result-link span:last-child { color: #26834b; }
+  @media (max-width: 480px) { .search-results { padding: 12px; } .result-links { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 480px) { .movie-search { gap: 6px; } .movie-search button { padding: 11px 13px; } }
 
   /* ---------- Sections ---------- */
@@ -217,7 +228,12 @@
         <input id="movieTitle" type="search" placeholder="Enter movie title (e.g. Funny AI)" aria-label="Movie title" autocomplete="off" />
         <button type="submit">Search</button>
       </form>
-      <p class="search-help">Search applies to chartdrama and dramafren websites. Enter a title, search, then choose a website box.</p>
+      <p class="search-help">Enter a title and click Search to show matching search links below.</p>
+      <section class="search-results" id="searchResults" aria-live="polite" aria-label="Movie search destinations">
+        <h2>Search results for <span id="resultsTitle"></span></h2>
+        <p class="results-summary">Choose a website below to open its search results. Each site displays its own results page.</p>
+        <div id="searchResultGroups"></div>
+      </section>
     </div>
   </header>
 
@@ -253,9 +269,20 @@
       movieSearchButton.classList.toggle("ready", movieSearchTerm.length > 0);
       movieSearchButton.setAttribute("aria-label", movieSearchTerm ? "Search title confirmed" : "Enter a title to search");
       var help = document.querySelector(".search-help");
-      help.textContent = movieSearchTerm
-        ? 'Search confirmed for “' + movieSearchTerm + '”. Now click a website box to search there.'
-        : 'Enter a movie title, then click Search to confirm it.';
+      var resultsPanel = document.getElementById("searchResults");
+      var resultsTitle = document.getElementById("resultsTitle");
+      var resultsGroups = document.getElementById("searchResultGroups");
+      if (!movieSearchTerm) {
+        help.textContent = 'Enter a movie title, then click Search to confirm it.';
+        resultsPanel.classList.remove("visible");
+        resultsGroups.replaceChildren();
+        return;
+      }
+      help.textContent = 'Search confirmed. Choose any site in the results list below, or use the boxes further down.';
+      resultsTitle.textContent = '“' + movieSearchTerm + '”';
+      renderSearchResults(resultsGroups);
+      resultsPanel.classList.add("visible");
+      resultsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
 
     var GROUP_TOP = [
@@ -343,6 +370,56 @@
       { name: "reelfren",    url: "https://reelfren.com/", searchType: "reelfren-all" }
     ];
 
+    // Build the destination URL for a site's own search page.
+    function getSearchUrl(site, searchGroup) {
+      var target = new URL(site.url);
+      var queryPlus = encodeURIComponent(movieSearchTerm).replace(/%20/g, "+");
+      var queryPercent20 = encodeURIComponent(movieSearchTerm);
+      if (site.searchType === "khfullhd") {
+        target.search = "?s=" + queryPlus;
+      } else if (site.searchType === "movienova") {
+        target.pathname = "/search"; target.search = "?q=" + queryPlus + "&mode=title";
+      } else if (site.searchType === "olevod") {
+        target.pathname = "/search"; target.search = "?q=" + queryPlus;
+      } else if (site.searchType && site.searchType.indexOf("reelfren-") === 0) {
+        var provider = site.searchType === "reelfren-all" ? "all" : site.searchType.slice("reelfren-".length);
+        target.pathname = "/search"; target.search = "?q=" + queryPercent20 + "&provider=" + provider + "&lang=en";
+      } else if (searchGroup === "chartdrama") {
+        target.pathname = target.pathname.replace(/\/$/, "") + "/search"; target.search = "?q=" + queryPlus;
+      } else if (searchGroup === "dramafren") {
+        target.pathname = "/index.php"; target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
+      } else {
+        return site.url;
+      }
+      target.hash = "";
+      return target.href;
+    }
+
+    function renderSearchResults(container) {
+      container.replaceChildren();
+      var groups = [
+        { title: "Featured", sites: GROUP_TOP, searchGroup: "featured" },
+        { title: "Featured Providers", sites: GROUP_PROVIDERS, searchGroup: "providers" },
+        { title: "chartdrama", sites: GROUP_CHARTDRAMA, searchGroup: "chartdrama" },
+        { title: "dramafren", sites: GROUP_DRAMAFREN, searchGroup: "dramafren" }
+      ];
+      groups.forEach(function (group) {
+        var wrap = document.createElement("div"); wrap.className = "result-group";
+        var heading = document.createElement("h3"); heading.textContent = group.title;
+        var links = document.createElement("div"); links.className = "result-links";
+        group.sites.forEach(function (site) {
+          var link = document.createElement("a");
+          link.className = "result-link";
+          link.href = getSearchUrl(site, group.searchGroup);
+          link.target = "_blank"; link.rel = "noopener noreferrer";
+          var name = document.createElement("span"); name.textContent = site.name;
+          var arrow = document.createElement("span"); arrow.textContent = "↗";
+          link.appendChild(name); link.appendChild(arrow); links.appendChild(link);
+        });
+        wrap.appendChild(heading); wrap.appendChild(links); container.appendChild(wrap);
+      });
+    }
+
     // A curated, harmonious color palette. Each tile picks one gradient from
     // this palette (cycled by position) so the boxes look coordinated on the
     // white background while staying distinct and easy to read.
@@ -374,35 +451,10 @@
       a.style.background = tileColors(colorIndex);
       a.addEventListener("click", function (event) {
         if (!movieSearchTerm) return;
-        var target = new URL(site.url);
-        var queryPlus = encodeURIComponent(movieSearchTerm).replace(/%20/g, "+");
-        var queryPercent20 = encodeURIComponent(movieSearchTerm);
-
-        // Explicit search routes for the Featured and Featured Providers tiles.
-        if (site.searchType === "khfullhd") {
-          target.search = "?s=" + queryPlus;
-        } else if (site.searchType === "movienova") {
-          target.pathname = "/search";
-          target.search = "?q=" + queryPlus + "&mode=title";
-        } else if (site.searchType === "olevod") {
-          target.pathname = "/search";
-          target.search = "?q=" + queryPlus;
-        } else if (site.searchType && site.searchType.indexOf("reelfren-") === 0) {
-          var provider = site.searchType === "reelfren-all" ? "all" : site.searchType.slice("reelfren-".length);
-          target.pathname = "/search";
-          target.search = "?q=" + queryPercent20 + "&provider=" + provider + "&lang=en";
-        } else if (searchGroup === "chartdrama") {
-          target.pathname = target.pathname.replace(/\/$/, "") + "/search";
-          target.search = "?q=" + queryPlus;
-        } else if (searchGroup === "dramafren") {
-          target.pathname = "/index.php";
-          target.search = "?page=search_result&q=" + queryPlus + "&lang=en";
-        } else {
-          return; // Other Featured tiles keep their normal homepage links.
-        }
+        var searchUrl = getSearchUrl(site, searchGroup);
+        if (searchUrl === site.url) return; // Other Featured tiles keep their normal homepage links.
         event.preventDefault();
-        target.hash = "";
-        window.open(target.href, "_blank", "noopener,noreferrer");
+        window.open(searchUrl, "_blank", "noopener,noreferrer");
       });
 
       var label = document.createElement("span");
